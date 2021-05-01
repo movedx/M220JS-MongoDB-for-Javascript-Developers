@@ -28,8 +28,8 @@ require("dotenv").config()
     // check that its type is a string
     // a projection is not required, but may help reduce the amount of data sent
     // over the wire!
-    const predicate = { somefield: { $someOperator: true } }
-    const projection = {}
+    const predicate = { lastupdated: { $exists: true, $type: String } }
+    const projection = { lastupdated: 1 }
     const cursor = await mflix
       .collection("movies")
       .find(predicate, projection)
@@ -38,7 +38,9 @@ require("dotenv").config()
       updateOne: {
         filter: { _id: ObjectId(_id) },
         update: {
-          $set: { lastupdated: new Date(Date.parse(lastupdated)) },
+          $set: {
+            lastupdated: new Date(Date.parse(lastupdated)),
+          },
         },
       },
     }))
@@ -47,7 +49,9 @@ require("dotenv").config()
       `Found ${moviesToMigrate.length} documents to update`,
     )
     // TODO: Complete the BulkWrite statement below
-    const { modifiedCount } = await "some bulk operation"
+    const { modifiedCount } = await mflix
+      .collection("movies")
+      .bulkWrite(moviesToMigrate, { ordered: false, w: "majority" })
 
     console.log("\x1b[32m", `${modifiedCount} documents updated`)
     client.close()
